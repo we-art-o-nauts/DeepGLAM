@@ -2,7 +2,7 @@ import './style.css'
 import * as THREE from 'three'
 import studio from '@theatre/studio'
 import { getProject } from '@theatre/core'
-import { FontLoader } from 'three/loaders/FontLoader.js';
+import { FontLoader } from './addons/loaders/FontLoader.js'
 
 /**
  * Theatre.js
@@ -40,10 +40,29 @@ const MAPS_BASE = '/swisstopo/'
 const MAPS_HISTORIC = [
   'map01-1864', 'map02-1894', 'map02-1914', 'map03-1944', 'map04-1974', 'map05-1994', 'map06-2004', 'map07-2014', 'map08-2024'
 ]
+
+const meshyHistory: THREE.Mesh[] = []
+MAPS_HISTORIC.forEach((map, index) => {
+  const texture = new THREE.TextureLoader().load(MAPS_BASE + map + '.jpg')
+  const geometry = new THREE.PlaneGeometry(130, 90, 130, 90)
+  const material = new THREE.MeshBasicMaterial({ map: texture })
+  const mesh2 = new THREE.Mesh(geometry, material)
+  meshyHistory.push(mesh2)
+  scene.add(mesh2)
+
+  const a_fly2 = sheet1.object('Map H ' + map, {
+    position: { x: 0, y: 0, z: 300 + index * -30 }
+  })
+  a_fly2.onValuesChange((values) => {
+    const { x, y, z } = values.position
+    mesh2.position.set(x, y, z)
+  })
+})
+
+
 const MAPS_SATELLITE = [
   'mapS1', 'mapS2', 'mapS3', 'mapS4'
 ]
-
 const meshyMaps: THREE.Mesh[] = []
 MAPS_SATELLITE.forEach((map, index) => {
   const texture = new THREE.TextureLoader().load(MAPS_BASE + map + '.jpg')
@@ -92,16 +111,32 @@ loader.load('/fonts/helvetiker_regular.typeface.json', function (font) {
         const a_material = new THREE.MeshStandardMaterial({ color: '#fff' })
         const a_mesh = new THREE.Mesh(a_box, a_material)
         a_mesh.position.set(
-          25 + Math.random() * 50, 
-          25 + Math.random() * 40, 
-          -100 + index * -20
+          -50 + Math.random() * 100, 
+          -40 + Math.random() * 80, 
+          -600 + index * -20
         )
         scene.add(a_mesh)
 
+        const matLine = new THREE.LineBasicMaterial({
+          color: '#fff'
+        });
+        const a_circle = new THREE.CircleGeometry(Math.random() * 30, 40)
+        const wireframe = new THREE.WireframeGeometry(a_circle);
+        const line = new THREE.LineSegments(wireframe, matLine);
+        line.material.depthTest = false;
+        line.material.opacity = 0.2;
+        line.material.transparent = true;
+        line.position.set(
+          -50 + Math.random() * 100,
+          -40 + Math.random() * 80,
+          (-600 + index * -20) + (Math.random() * 500)
+        )
+        scene.add(line)
+
         const msg = project.name
-        const msgShape = new THREE.ShapeGeometry(font.generateShapes(msg, 100))
+        const msgShape = new THREE.ShapeGeometry(font.generateShapes(msg, 3))
         const msgMesh = new THREE.Mesh(msgShape, a_material)
-        msgMesh.position.set(a_mesh.position.x, a_mesh.position.y, a_mesh.position.z)
+        msgMesh.position.set(a_mesh.position.x + 8, a_mesh.position.y - 3, a_mesh.position.z)
         scene.add(msgMesh)
       }) // -forEach
     }) // -fetch
