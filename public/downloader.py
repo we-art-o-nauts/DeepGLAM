@@ -7,7 +7,7 @@ def download_image(image_url, project_url=None):
     """Download remote image."""
     if not image_url:
         return
-    image_name = image_url.split('/')[-1]
+    image_name = image_url.split('/')[-1].split(':')[-1]
     if '?' in image_name:
         image_name = image_name.split('?')[0]
     # Default to jpeg when extension is missing

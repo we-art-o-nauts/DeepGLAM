@@ -104,7 +104,7 @@ cameraFlyObj.onValuesChange((values) => {
 })
 
 const loader = new FontLoader();
-loader.load('/fonts/helvetiker_regular.typeface.json', function (font) {
+loader.load('/fonts/AmpleSoft_Pro_Regular_Regular.json', function (font) {
 
   // Create objects for projects
   fetch('/projects.json')
