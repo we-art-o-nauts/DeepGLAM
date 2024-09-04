@@ -38,7 +38,11 @@ const scene = new THREE.Scene()
 
 const MAPS_BASE = '/swisstopo/'
 const MAPS_HISTORIC = [
-  'map01-1864', 'map02-1894', 'map02-1914', 'map03-1944', 'map04-1974', 'map05-1994', 'map06-2004', 'map07-2014', 'map08-2024'
+  'map01-1864', 
+  //'map02-1894', 'map02-1914', 'map03-1944', 'map04-1974', 
+  'map05-1994', 
+  //'map06-2004', 'map07-2014', 
+  'map08-2024'
 ]
 
 const meshyHistory: THREE.Mesh[] = []
@@ -51,7 +55,7 @@ MAPS_HISTORIC.forEach((map, index) => {
   scene.add(mesh2)
 
   const a_fly2 = sheet1.object('Map H ' + map, {
-    position: { x: 0, y: 0, z: 300 + index * -30 }
+    position: { x: 0, y: 0, z: 300 + index * -60 }
   })
   a_fly2.onValuesChange((values) => {
     const { x, y, z } = values.position
@@ -92,7 +96,7 @@ cameraFlyObj.onValuesChange((values) => {
   const { x, y, z } = values.position
   camera.position.set(x, y, z)
 
-  meshyMaps.forEach((map) => {
+  meshyMaps.forEach((map, index) => {
     const distance = Math.abs(map.position.z - z)
     map.material.transparent = true
     map.material.opacity = (distance > 30) ? 1.0 : (distance / 20)
@@ -107,8 +111,6 @@ loader.load('/fonts/helvetiker_regular.typeface.json', function (font) {
   .then(response => response.json())
   .then(data => {
     data.projects.forEach((project, index) => {
-        // Boxes for projects (hexagons would be nicer)
-        const a_box = new THREE.BoxGeometry(10, 10)
         // Default white
         const m_default = new THREE.MeshStandardMaterial({ color: '#fff' })
         // Position the things in space
@@ -117,6 +119,8 @@ loader.load('/fonts/helvetiker_regular.typeface.json', function (font) {
         const z = -600 + index * -20
         
         if (!project.image_url) {
+          // Boxes for projects (hexagons would be nicer)
+          const a_box = new THREE.BoxGeometry(5, 5)
           const a_mesh = new THREE.Mesh(a_box, m_default)
           a_mesh.position.set(x, y, z)
           scene.add(a_mesh)
@@ -125,8 +129,13 @@ loader.load('/fonts/helvetiker_regular.typeface.json', function (font) {
           loader.load(
             project.image_url,
           (texture) => {
+            texture.wrapS = THREE.RepeatWrapping;
+            texture.wrapT = THREE.RepeatWrapping;
+            texture.repeat.set(texture.image.height / texture.image.width, 1)
             const a_material = new THREE.MeshBasicMaterial({ map: texture })
-            const a_mesh = new THREE.Mesh(a_box, a_material)
+            const a_circle = new THREE.CircleGeometry(10, 6)
+            const a_mesh = new THREE.Mesh(a_circle, a_material)
+            a_mesh.position.set(x - 7, y - 1, z - 1)
             scene.add(a_mesh)
           })
         }
