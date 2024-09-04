@@ -107,16 +107,31 @@ loader.load('/fonts/helvetiker_regular.typeface.json', function (font) {
   .then(response => response.json())
   .then(data => {
     data.projects.forEach((project, index) => {
+        // Boxes for projects (hexagons would be nicer)
         const a_box = new THREE.BoxGeometry(10, 10)
-        const a_material = new THREE.MeshStandardMaterial({ color: '#fff' })
-        const a_mesh = new THREE.Mesh(a_box, a_material)
-        a_mesh.position.set(
-          -50 + Math.random() * 100, 
-          -40 + Math.random() * 80, 
-          -600 + index * -20
-        )
-        scene.add(a_mesh)
+        // Default white
+        const m_default = new THREE.MeshStandardMaterial({ color: '#fff' })
+        // Position the things in space
+        const x = -50 + Math.random() * 100
+        const y = -40 + Math.random() * 80
+        const z = -600 + index * -20
+        
+        if (!project.image_url) {
+          const a_mesh = new THREE.Mesh(a_box, m_default)
+          a_mesh.position.set(x, y, z)
+          scene.add(a_mesh)
+        } else {
+          const loader = new THREE.TextureLoader()
+          loader.load(
+            project.image_url,
+          (texture) => {
+            const a_material = new THREE.MeshBasicMaterial({ map: texture })
+            const a_mesh = new THREE.Mesh(a_box, a_material)
+            scene.add(a_mesh)
+          })
+        }
 
+        // Bubbles for activities (currently random)
         const matLine = new THREE.LineBasicMaterial({
           color: '#fff'
         });
@@ -135,8 +150,8 @@ loader.load('/fonts/helvetiker_regular.typeface.json', function (font) {
 
         const msg = project.name
         const msgShape = new THREE.ShapeGeometry(font.generateShapes(msg, 3))
-        const msgMesh = new THREE.Mesh(msgShape, a_material)
-        msgMesh.position.set(a_mesh.position.x + 8, a_mesh.position.y - 3, a_mesh.position.z)
+        const msgMesh = new THREE.Mesh(msgShape, m_default)
+        msgMesh.position.set(x + 8, y - 3, z)
         scene.add(msgMesh)
       }) // -forEach
     }) // -fetch
