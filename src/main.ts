@@ -190,6 +190,12 @@ const scene = new THREE.Scene()
 
 const sheetI = project.sheet('Intro')
 
+let curAudioYear = 2024       
+sheetI.sequence.attachAudio({ source: 'data/' + curAudioYear + '/audio.ogg' }).then(() => {
+  console.log('Audio loaded', curAudioYear)
+})
+
+
 const meshyHistory: THREE.Mesh[] = []
 MAPS_HISTORIC.forEach((map, index) => {
   const texture = new THREE.TextureLoader().load(MAPS_BASE + map + '.jpg')
@@ -349,9 +355,12 @@ cameraFlyObj.onValuesChange((values) => {
       const year_data = 'data/' + the_year + '/'
 
       // Load and play some audio
-      sheetI.sequence.attachAudio({ source: year_data + 'audio.ogg' }).then(() => {
-        console.log('Audio loaded', the_year)
-      })
+      if (curAudioYear !== the_year) {
+        curAudioYear = the_year       
+        sheetI.sequence.attachAudio({ source: year_data + 'audio.ogg' }).then(() => {
+          console.log('Audio loaded', the_year)
+        })
+      }
 
     } else {
       $year.innerHTML = ''
