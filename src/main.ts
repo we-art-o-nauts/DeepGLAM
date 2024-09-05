@@ -5,7 +5,32 @@ import { getProject } from '@theatre/core'
 import { FontLoader } from './addons/loaders/FontLoader.js'
 
 /**
- * Theatre.js
+ * Configuratoin
+ */
+
+const DEEP_YEARS = [ 
+  2015, 2016, 2017,
+  2018, 2019, 2020, 
+  2021, 2022, 2023 // , 2024 
+].reverse()
+const PARSECS_PER_YEAR = 1000
+
+const MAPS_BASE = '/data/2024/'
+const MAPS_HISTORIC = [
+  'map01-1864', 
+  'map02-1894', 
+  'map02-1914', 
+  'map05-1994', 
+  'map08-2024'
+]
+const MAPS_SATELLITE = [
+  // TODO: add clouds
+  'mapS1', 'mapS2', 'mapS3', 'mapS4'
+]
+
+
+/**
+ * Theatre.js set up
  */
 
 studio.initialize()
@@ -19,90 +44,43 @@ const scene = new THREE.Scene()
 
 const sheetI = project.sheet('Intro')
 
-const MAPS_BASE = '/data/2024/'
-const MAPS_HISTORIC = [
-  'map01-1864', 
-  'map02-1894', 
-  'map02-1914', 
-  'map05-1994', 
-  'map08-2024'
-]
 const meshyHistory: THREE.Mesh[] = []
 MAPS_HISTORIC.forEach((map, index) => {
   const texture = new THREE.TextureLoader().load(MAPS_BASE + map + '.jpg')
   const geometry = new THREE.PlaneGeometry(130, 90, 130, 90)
   const material = new THREE.MeshBasicMaterial({ map: texture })
   const mesh2 = new THREE.Mesh(geometry, material)
+  mesh2.position.set(0, 0, 300 + index * -60)
   meshyHistory.push(mesh2)
   scene.add(mesh2)
-
-  const a_fly2 = sheetI.object('Map H ' + map, {
-    position: { x: 0, y: 0, z: 300 + index * -60 }
-  })
-  a_fly2.onValuesChange((values) => {
-    const { x, y, z } = values.position
-    mesh2.position.set(x, y, z)
-  })
 })
-const MAPS_SATELLITE = [
-  // TODO: add clouds
-  'mapS1', 'mapS2', 'mapS3', 'mapS4'
-]
 const meshyMaps: THREE.Mesh[] = []
 MAPS_SATELLITE.forEach((map, index) => {
   const texture = new THREE.TextureLoader().load(MAPS_BASE + map + '.jpg')
   const geometry = new THREE.PlaneGeometry(130, 90, 130, 90)
   const material = new THREE.MeshBasicMaterial({ map: texture })
   const mesh = new THREE.Mesh(geometry, material)
+  mesh.position.set(0, 0, index * -30)
   meshyMaps.push(mesh)
   scene.add(mesh)
-
-  const a_fly = sheetI.object('Map ' + map, {
-    position: { x: 0, y: 0, z: index * -30 }
-  })
-  a_fly.onValuesChange((values) => {
-    const { x, y, z } = values.position
-    mesh.position.set(x, y, z)
-  })
 })
-
-/**
- * Camera
- */
-const camera = new THREE.PerspectiveCamera(
-  70,
-  window.innerWidth / window.innerHeight,
-  10,
-  200,
-)
-camera.position.z = 50
-const cameraFlyObj = sheetI.object('Camera', {
-  position: { x: 0, y: 0, z: 50 }
-})
-cameraFlyObj.onValuesChange((values) => {
-  const { x, y, z } = values.position
-  camera.position.set(x, y, z)
-  meshyMaps.forEach((map, index) => {
-    const distance = Math.abs(map.position.z - z)
-    map.material.transparent = true
-    map.material.opacity = (distance > 30) ? 1.0 : (distance / 20)
-  })
-})
-
-
-const DEEP_YEARS = [ 2015, 2016, 2017
- // 2018, 2019, 2020, 2021, 2022, 2023 // , 2024 
-]
 
 /**
  * Main loop for years
  */
 
+// A nice plain white
+const m_default = new THREE.MeshStandardMaterial({ color: '#fff' })
+const m_black = new THREE.MeshStandardMaterial({ color: '#000' })
+
+// A nice vector font
 const loader = new FontLoader();
 loader.load('/fonts/AmpleSoft_Pro_Regular_Regular.json', function (font) {
+
   for (let yyy = 0; yyy < DEEP_YEARS.length; yyy++) {
 
     const year = DEEP_YEARS[yyy]
+    const year_parsec = -(PARSECS_PER_YEAR + PARSECS_PER_YEAR * yyy)
     const sheetY = project.sheet('Year ' + year)
 
     // Create objects for projects
@@ -111,12 +89,23 @@ loader.load('/fonts/AmpleSoft_Pro_Regular_Regular.json', function (font) {
     .then(response => response.json())
     .then(data => {
       data.projects.forEach((project, index) => {
-          // Default white
-          const m_default = new THREE.MeshStandardMaterial({ color: '#fff' })
+          // Add the year's map and text
+          const yearShape = new THREE.ShapeGeometry(font.generateShapes('' + year, 20))
+          const yearMesh = new THREE.Mesh(yearShape, m_black)
+          yearMesh.position.set(-54, -43, year_parsec + 101)
+          yearMesh.material.opacity = 0.5
+          scene.add(yearMesh)
+          const mapTexture = new THREE.TextureLoader().load(year_data + 'map.jpg')
+          const mapGeometry = new THREE.PlaneGeometry(126, 90, 126, 90)
+          const mapMaterial = new THREE.MeshBasicMaterial({ map: mapTexture })
+          const mapMesh = new THREE.Mesh(mapGeometry, mapMaterial)
+          mapMesh.position.set(0, 0, year_parsec + 100)
+          scene.add(mapMesh)
+
           // Position the things in space
           const x = -50 + Math.random() * 100
           const y = -40 + Math.random() * 80
-          const z = -600 + index * -20
+          const z = year_parsec + index * -20
           
           if (!project.image_url) {
             // Boxes for projects (hexagons would be nicer)
@@ -154,7 +143,7 @@ loader.load('/fonts/AmpleSoft_Pro_Regular_Regular.json', function (font) {
           line.position.set(
             -50 + Math.random() * 100,
             -40 + Math.random() * 80,
-            (-600 + index * -20) + (Math.random() * 500)
+            (year_parsec + index * -20) + (Math.random() * 500)
           )
           scene.add(line)
 
@@ -174,9 +163,47 @@ loader.load('/fonts/AmpleSoft_Pro_Regular_Regular.json', function (font) {
 /*
  * Lights
  */
+
 // Ambient Light
 const ambientLight = new THREE.AmbientLight('#ffffff', 1.0)
 scene.add(ambientLight)
+
+
+/**
+ * Camera
+ */
+const camera = new THREE.PerspectiveCamera(
+  70,
+  window.innerWidth / window.innerHeight,
+  10,
+  200,
+)
+const cameraFlyObj = sheetI.object('Camera', {
+  position: { x: 0, y: 0, z: 64 }
+})
+
+const $year = document.getElementById('year')
+
+cameraFlyObj.onValuesChange((values) => {
+  const { x, y, z } = values.position
+  camera.position.set(x, y, z)
+  if (z > 0) {    
+    // Fade the maps into each other
+    meshyMaps.forEach((map, index) => {
+      const distance = Math.abs(map.position.z - z)
+      map.material.transparent = true
+      map.material.opacity = (distance > 30) ? 1.0 : (distance / 20)
+    })
+    $year.innerHTML = ''
+  } else {
+    const index = Math.round((-100-z) / PARSECS_PER_YEAR) - 1
+    if (index >= 0 && index < DEEP_YEARS.length) {
+      $year.innerHTML = DEEP_YEARS[index] + ''
+    } else {
+      $year.innerHTML = ''
+    }
+  }
+})
 
 /**
  * Renderer
