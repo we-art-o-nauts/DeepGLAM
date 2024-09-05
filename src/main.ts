@@ -27,6 +27,150 @@ const MAPS_SATELLITE = [
   // TODO: add clouds
   'mapS1', 'mapS2', 'mapS3', 'mapS4'
 ]
+const projectState = {
+  "sheetsById": {
+    "Intro": {
+      "staticOverrides": {
+        "byObject": {
+          "Camera": {
+            "position": {
+              "z": -2191
+            }
+          }
+        }
+      },
+      "sequence": {
+        "subUnitsPerUnit": 30,
+        "length": 600,
+        "type": "PositionalSequence",
+        "tracksByObject": {
+          "Camera": {
+            "trackData": {
+              "APVVYoKBw-": {
+                "type": "BasicKeyframedTrack",
+                "__debugName": "Camera:[\"position\",\"z\"]",
+                "keyframes": [
+                  {
+                    "id": "GUq4K_HF28",
+                    "position": 0,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 107
+                  },
+                  {
+                    "id": "xXqJPH2rmR",
+                    "position": 10.033,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 63.362289250138474
+                  },
+                  {
+                    "id": "wHFrqzYRme",
+                    "position": 26.233,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": -103.25790726995105
+                  },
+                  {
+                    "id": "D692Ge5fY7",
+                    "position": 43.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": -634.808228750981
+                  },
+                  {
+                    "id": "altmA_7KA-",
+                    "position": 61.533,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": -836.889932406351
+                  },
+                  {
+                    "id": "y3R1ecLf4Y",
+                    "position": 540.8,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": -9819
+                  },
+                  {
+                    "id": "R7wY5tXzFT",
+                    "position": 585.367,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": 350.1922329467529
+                  },
+                  {
+                    "id": "P62_ie4WC0",
+                    "position": 600,
+                    "connectedRight": true,
+                    "handles": [
+                      0.5,
+                      1,
+                      0.5,
+                      0
+                    ],
+                    "type": "bezier",
+                    "value": -130
+                  }
+                ]
+              }
+            },
+            "trackIdByPropPath": {
+              "[\"position\",\"z\"]": "APVVYoKBw-"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitionVersion": "0.4.0",
+  "revisionHistory": [
+    "KUpfi1zWbmhu5wCA",
+    "SsrhEtPoOlQReG7I"
+  ]
+}
 
 
 /**
@@ -34,7 +178,9 @@ const MAPS_SATELLITE = [
  */
 
 studio.initialize()
-const project = getProject('DeepGLAM')
+const project = getProject('DeepGLAM', {
+  state: projectState
+})
 
 const scene = new THREE.Scene()
 
@@ -82,9 +228,9 @@ loader.load('/fonts/AmpleSoft_Pro_Regular_Regular.json', function (font) {
     const year = DEEP_YEARS[yyy]
     const year_parsec = -(PARSECS_PER_YEAR + PARSECS_PER_YEAR * yyy)
     const sheetY = project.sheet('Year ' + year)
+    const year_data = 'data/' + year + '/'
 
     // Create objects for projects
-    const year_data = 'data/' + year + '/'
     fetch(year_data + 'projects.json')
     .then(response => response.json())
     .then(data => {
@@ -92,14 +238,14 @@ loader.load('/fonts/AmpleSoft_Pro_Regular_Regular.json', function (font) {
           // Add the year's map and text
           const yearShape = new THREE.ShapeGeometry(font.generateShapes('' + year, 20))
           const yearMesh = new THREE.Mesh(yearShape, m_black)
-          yearMesh.position.set(-54, -43, year_parsec + 101)
+          yearMesh.position.set(-54, -43, year_parsec + 301)
           yearMesh.material.opacity = 0.5
           scene.add(yearMesh)
           const mapTexture = new THREE.TextureLoader().load(year_data + 'map.jpg')
           const mapGeometry = new THREE.PlaneGeometry(126, 90, 126, 90)
           const mapMaterial = new THREE.MeshBasicMaterial({ map: mapTexture })
           const mapMesh = new THREE.Mesh(mapGeometry, mapMaterial)
-          mapMesh.position.set(0, 0, year_parsec + 100)
+          mapMesh.position.set(0, 0, year_parsec + 300)
           scene.add(mapMesh)
 
           // Position the things in space
@@ -198,7 +344,15 @@ cameraFlyObj.onValuesChange((values) => {
   } else {
     const index = Math.round((-100-z) / PARSECS_PER_YEAR) - 1
     if (index >= 0 && index < DEEP_YEARS.length) {
-      $year.innerHTML = DEEP_YEARS[index] + ''
+      const the_year = DEEP_YEARS[index]
+      $year.innerHTML = the_year + ''
+      const year_data = 'data/' + the_year + '/'
+
+      // Load and play some audio
+      sheetI.sequence.attachAudio({ source: year_data + 'audio.ogg' }).then(() => {
+        console.log('Audio loaded', the_year)
+      })
+
     } else {
       $year.innerHTML = ''
     }
